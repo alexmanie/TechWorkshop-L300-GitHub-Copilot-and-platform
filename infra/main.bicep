@@ -42,6 +42,16 @@ module containerRegistry 'modules/container-registry.bicep' = {
   }
 }
 
+// Azure AI Services (GPT-4 and Phi deployments)
+module aiServices 'modules/ai-services.bicep' = {
+  scope: resourceGroup
+  params: {
+    name: environmentName
+    location: location
+    tags: tags
+  }
+}
+
 // Managed Identity with AcrPull role
 module managedIdentity 'modules/managed-identity.bicep' = {
   scope: resourceGroup
@@ -50,6 +60,7 @@ module managedIdentity 'modules/managed-identity.bicep' = {
     location: location
     tags: tags
     containerRegistryId: containerRegistry.outputs.id
+    aiServicesAccountId: aiServices.outputs.accountId
   }
 }
 
@@ -64,16 +75,7 @@ module appService 'modules/app-service.bicep' = {
     managedIdentityId: managedIdentity.outputs.id
     managedIdentityClientId: managedIdentity.outputs.clientId
     applicationInsightsConnectionString: monitoring.outputs.applicationInsightsConnectionString
-  }
-}
-
-// Azure AI Services (GPT-4 and Phi deployments)
-module aiServices 'modules/ai-services.bicep' = {
-  scope: resourceGroup
-  params: {
-    name: environmentName
-    location: location
-    tags: tags
+    aiServicesEndpoint: aiServices.outputs.endpoint
   }
 }
 
