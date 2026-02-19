@@ -1,6 +1,9 @@
 name: Create Issue for Phi-4 Chat Feature (PR #7)
 
 on:
+  push:
+    branches:
+      - 'copilot/link-wip-to-pr-7'
   workflow_dispatch:
 
 permissions:
