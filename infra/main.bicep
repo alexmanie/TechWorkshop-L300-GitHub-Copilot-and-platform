@@ -79,9 +79,23 @@ module appService 'modules/app-service.bicep' = {
   }
 }
 
+// Azure AI Foundry Hub and Project with Phi-4 accessible via AI Services connection
+module aiFoundry 'modules/ai-foundry.bicep' = {
+  scope: resourceGroup
+  params: {
+    name: environmentName
+    location: location
+    tags: tags
+    aiServicesId: aiServices.outputs.id
+    aiServicesEndpoint: aiServices.outputs.endpoint
+  }
+}
+
 // Outputs for AZD
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
 output AZURE_CONTAINER_REGISTRY_LOGIN_SERVER string = containerRegistry.outputs.loginServer
 output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.registryName
 output WEB_URI string = appService.outputs.uri
 output AZURE_AI_SERVICES_ENDPOINT string = aiServices.outputs.endpoint
+output AZURE_AI_FOUNDRY_HUB_NAME string = aiFoundry.outputs.hubName
+output AZURE_AI_FOUNDRY_PROJECT_NAME string = aiFoundry.outputs.projectName
