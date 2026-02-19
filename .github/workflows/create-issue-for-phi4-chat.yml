@@ -1,0 +1,98 @@
+name: Create Issue for Phi-4 Chat Feature (PR #7)
+
+on:
+  push:
+    branches:
+      - 'copilot/link-wip-to-pr-7'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  create-and-link-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue and link to PR #7
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Check if issue already exists (search by title)
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open'
+            });
+
+            const title = 'Add Phi-4 chat page via Azure AI Foundry Inference SDK';
+            const existing = existingIssues.data.find(i => i.title === title && !i.pull_request);
+
+            let issueNumber;
+            if (existing) {
+              issueNumber = existing.number;
+              console.log(`Issue already exists: #${issueNumber}`);
+            } else {
+              const issue = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body: [
+                  '## Feature Request',
+                  '',
+                  'Add a simple chat functionality as a separate page that sends a user message to a',
+                  'Microsoft Foundry (Azure AI) endpoint and appends the response to an existing text area.',
+                  '',
+                  '## Requirements',
+                  '',
+                  '- Add a new `/Chat` page as a dedicated view in the web application',
+                  '- Send user messages to the deployed **Phi-4** model endpoint',
+                  '- Display the AI responses in a conversation textarea (no page reload)',
+                  '- Use `DefaultAzureCredential` (managed identity in production, Azure CLI locally)',
+                  '- Read endpoint and deployment name from the `AzureAI` configuration section',
+                  '- Register `ChatService` as a singleton in `Program.cs`',
+                  '- Add a **Chat** nav link to the shared layout',
+                  '',
+                  '## Infrastructure',
+                  '',
+                  '- Grant **Cognitive Services User** role to the managed identity scoped to the AI Services account',
+                  '- Inject `AZURE_CLIENT_ID` and `AzureAI__Endpoint` as App Service app settings',
+                  '',
+                  '## Acceptance Criteria',
+                  '',
+                  '- Users can type a message and receive a reply from the Phi-4 model without page reload',
+                  '- The feature works both locally (via Azure CLI) and in production (via managed identity)',
+                  '- Infrastructure changes deploy cleanly via AZD',
+                  '',
+                  '## Related',
+                  '',
+                  'Being implemented in pull request #7.'
+                ].join('\n')
+              });
+              issueNumber = issue.data.number;
+              console.log(`Created issue #${issueNumber}: ${issue.data.html_url}`);
+            }
+
+            // Update PR #7 body to close the issue (if not already referenced)
+            const pr = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: 7
+            });
+
+            const prBody = pr.data.body || '';
+            if (!prBody.includes(`#${issueNumber}`)) {
+              const updatedBody = prBody.trimEnd() + `\n\nCloses #${issueNumber}`;
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: 7,
+                body: updatedBody
+              });
+              console.log(`Updated PR #7 to close issue #${issueNumber}`);
+            } else {
+              console.log(`PR #7 already references issue #${issueNumber}`);
+            }
