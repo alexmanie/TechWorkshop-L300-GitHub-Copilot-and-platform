@@ -83,8 +83,9 @@ jobs:
               pull_number: 7
             });
 
-            if (!pr.data.body.includes(`#${issueNumber}`)) {
-              const updatedBody = pr.data.body.trimEnd() + `\n\nCloses #${issueNumber}`;
+            const prBody = pr.data.body || '';
+            if (!prBody.includes(`#${issueNumber}`)) {
+              const updatedBody = prBody.trimEnd() + `\n\nCloses #${issueNumber}`;
               await github.rest.pulls.update({
                 owner,
                 repo,
