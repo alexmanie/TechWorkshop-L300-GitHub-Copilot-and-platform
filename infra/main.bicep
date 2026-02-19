@@ -42,6 +42,16 @@ module containerRegistry 'modules/container-registry.bicep' = {
   }
 }
 
+// Azure AI Services (GPT-4 and Phi deployments)
+module aiServices 'modules/ai-services.bicep' = {
+  scope: resourceGroup
+  params: {
+    name: environmentName
+    location: location
+    tags: tags
+  }
+}
+
 // Managed Identity with AcrPull role
 module managedIdentity 'modules/managed-identity.bicep' = {
   scope: resourceGroup
@@ -50,6 +60,7 @@ module managedIdentity 'modules/managed-identity.bicep' = {
     location: location
     tags: tags
     containerRegistryId: containerRegistry.outputs.id
+    aiServicesAccountId: aiServices.outputs.accountId
   }
 }
 
@@ -64,16 +75,19 @@ module appService 'modules/app-service.bicep' = {
     managedIdentityId: managedIdentity.outputs.id
     managedIdentityClientId: managedIdentity.outputs.clientId
     applicationInsightsConnectionString: monitoring.outputs.applicationInsightsConnectionString
+    aiServicesEndpoint: aiServices.outputs.endpoint
   }
 }
 
-// Azure AI Services (GPT-4 and Phi deployments)
-module aiServices 'modules/ai-services.bicep' = {
+// Azure AI Foundry Hub and Project with Phi-4 accessible via AI Services connection
+module aiFoundry 'modules/ai-foundry.bicep' = {
   scope: resourceGroup
   params: {
     name: environmentName
     location: location
     tags: tags
+    aiServicesId: aiServices.outputs.id
+    aiServicesEndpoint: aiServices.outputs.endpoint
   }
 }
 
@@ -83,3 +97,5 @@ output AZURE_CONTAINER_REGISTRY_LOGIN_SERVER string = containerRegistry.outputs.
 output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.registryName
 output WEB_URI string = appService.outputs.uri
 output AZURE_AI_SERVICES_ENDPOINT string = aiServices.outputs.endpoint
+output AZURE_AI_FOUNDRY_HUB_NAME string = aiFoundry.outputs.hubName
+output AZURE_AI_FOUNDRY_PROJECT_NAME string = aiFoundry.outputs.projectName
