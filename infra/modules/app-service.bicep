@@ -21,6 +21,9 @@ param managedIdentityClientId string
 @description('Application Insights connection string')
 param applicationInsightsConnectionString string
 
+@description('Azure AI Services endpoint')
+param aiServicesEndpoint string
+
 @description('Docker image name and tag')
 param dockerImageName string = 'zavastorefront:latest'
 
@@ -73,6 +76,14 @@ resource appService 'Microsoft.Web/sites@2025-03-01' = {
         {
           name: 'DOCKER_REGISTRY_SERVER_URL'
           value: 'https://${containerRegistryLoginServer}'
+        }
+        {
+          name: 'AZURE_CLIENT_ID'
+          value: managedIdentityClientId
+        }
+        {
+          name: 'AzureAI__Endpoint'
+          value: aiServicesEndpoint
         }
       ]
     }

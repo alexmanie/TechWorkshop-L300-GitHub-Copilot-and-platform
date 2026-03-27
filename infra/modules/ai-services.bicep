@@ -70,3 +70,10 @@ output endpoint string = aiServicesAccount.properties.endpoint
 
 @description('AI Services account name')
 output accountName string = aiServicesAccount.name
+
+@description('AI Services account resource ID')
+<<<<<<< copilot/update-bicep-configuration
+output id string = aiServicesAccount.id
+=======
+output accountId string = aiServicesAccount.id
+>>>>>>> copilot/add-phi-4-chat-page
