@@ -50,6 +50,7 @@ module managedIdentity 'modules/managed-identity.bicep' = {
     location: location
     tags: tags
     containerRegistryId: containerRegistry.outputs.id
+    aiServicesId: aiServices.outputs.id
   }
 }
 
@@ -64,6 +65,7 @@ module appService 'modules/app-service.bicep' = {
     managedIdentityId: managedIdentity.outputs.id
     managedIdentityClientId: managedIdentity.outputs.clientId
     applicationInsightsConnectionString: monitoring.outputs.applicationInsightsConnectionString
+    aiServicesEndpoint: aiServices.outputs.endpoint
   }
 }
 
