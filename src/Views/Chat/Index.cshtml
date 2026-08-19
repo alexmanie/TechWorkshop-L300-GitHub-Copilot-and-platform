@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Chat with Phi-4</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="chatHistory" class="form-label fw-semibold">Conversation</label>
+                <textarea id="chatHistory" class="form-control" rows="12" readonly
+                          style="resize: vertical; background-color: #f8f9fa; font-family: monospace;"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="userMessage" class="form-label fw-semibold">Your message</label>
+                <textarea id="userMessage" class="form-control" rows="3"
+                          placeholder="Type your message here..."></textarea>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button id="sendBtn" class="btn btn-primary" onclick="sendMessage()">
+                    <span id="sendBtnText">Send</span>
+                    <span id="sendBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    async function sendMessage() {
+        const messageInput = document.getElementById('userMessage');
+        const chatHistory = document.getElementById('chatHistory');
+        const sendBtn = document.getElementById('sendBtn');
+        const sendBtnText = document.getElementById('sendBtnText');
+        const sendBtnSpinner = document.getElementById('sendBtnSpinner');
+
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        sendBtn.disabled = true;
+        sendBtnText.textContent = 'Sending...';
+        sendBtnSpinner.classList.remove('d-none');
+
+        appendToHistory('You', message);
+        messageInput.value = '';
+
+        try {
+            const response = await fetch('/Chat/Send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                appendToHistory('Error', response.ok ? 'Received an unexpected response.' : `Server error (${response.status}).`);
+                return;
+            }
+
+            if (!response.ok) {
+                appendToHistory('Error', data.error ?? `Server error (${response.status}).`);
+            } else {
+                appendToHistory('Phi-4', data.reply);
+            }
+        } catch {
+            appendToHistory('Error', 'Failed to reach the server. Please try again.');
+        } finally {
+            sendBtn.disabled = false;
+            sendBtnText.textContent = 'Send';
+            sendBtnSpinner.classList.add('d-none');
+        }
+    }
+
+    function appendToHistory(sender, text) {
+        const chatHistory = document.getElementById('chatHistory');
+        const separator = chatHistory.value ? '\n\n' : '';
+        chatHistory.value += separator + sender + ':\n' + text;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    document.getElementById('userMessage').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+</script>
+}

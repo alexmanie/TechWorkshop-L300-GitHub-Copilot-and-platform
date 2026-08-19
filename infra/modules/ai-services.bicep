@@ -70,3 +70,6 @@ output endpoint string = aiServicesAccount.properties.endpoint
 
 @description('AI Services account name')
 output accountName string = aiServicesAccount.name
+
+@description('AI Services account resource ID')
+output id string = aiServicesAccount.id
