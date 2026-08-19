@@ -12,12 +12,18 @@ param tags object = {}
 @description('Container registry resource ID for AcrPull role assignment')
 param containerRegistryId string
 
+@description('AI Services account resource ID for Cognitive Services User role assignment')
+param aiServicesAccountId string
+
 // Generate unique suffix for resource names
 var resourceSuffix = take(uniqueString(subscription().id, resourceGroup().name, name), 6)
 var identityName = 'id-${name}-${resourceSuffix}'
 
 // AcrPull built-in role definition ID
 var acrPullRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+
+// Cognitive Services User built-in role definition ID
+var cognitiveServicesUserRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: identityName
@@ -35,6 +41,20 @@ resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
   properties: {
     principalId: managedIdentity.properties.principalId
     roleDefinitionId: acrPullRoleDefinitionId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2025-09-01' existing = {
+  name: last(split(aiServicesAccountId, '/'))
+}
+
+resource cognitiveServicesUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(aiServicesAccount.id, managedIdentity.id, cognitiveServicesUserRoleDefinitionId)
+  scope: aiServicesAccount
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    roleDefinitionId: cognitiveServicesUserRoleDefinitionId
     principalType: 'ServicePrincipal'
   }
 }
